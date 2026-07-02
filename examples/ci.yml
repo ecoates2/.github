@@ -1,0 +1,29 @@
+# Drop this into each Rust repo at .github/workflows/ci.yml.
+# It is the entire per-repo CI config: all logic lives in the central
+# reusable workflow, and this wrapper only supplies repo-specific inputs.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same ref to save runner time.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ecoates2/.github/.github/workflows/rust-ci.yml@v1
+    with:
+      # --- Example: a published single-crate library (like icon-sys) ---
+      # gio CLI + folder icon themes for the Linux backend tests.
+      linux-apt-packages: libglib2.0-bin adwaita-icon-theme hicolor-icon-theme
+
+      # --- Example: an unpublished app / workspace (uncomment as needed) ---
+      # run-semver-checks: false      # nothing published to diff against
+      # workspace-flag: "--workspace" # lint/test every crate in the workspace

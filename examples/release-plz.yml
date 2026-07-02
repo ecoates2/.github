@@ -1,0 +1,17 @@
+# Drop this into each publishable repo at .github/workflows/release-plz.yml.
+name: Release-plz
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  release-plz:
+    uses: ecoates2/.github/.github/workflows/release-plz.yml@v1
+    with:
+      owner-guard: ecoates2
+    secrets:
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

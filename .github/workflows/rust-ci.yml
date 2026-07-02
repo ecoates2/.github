@@ -1,0 +1,267 @@
+# Reusable Rust CI workflow (central copy).
+#
+# This is the single shared "library" of CI logic for all of ecoates2's Rust
+# repos. Each repo calls it with a thin wrapper (see examples/ci.yml) via:
+#
+#   uses: ecoates2/.github/.github/workflows/rust-ci.yml@v1
+#
+# Bump the `@v1` tag (or move it) when you make a backwards-compatible change,
+# and cut `@v2` for anything that changes the input contract.
+name: Rust CI
+
+on:
+  workflow_call:
+    inputs:
+      rust-container-image:
+        description: Container image used for the Linux-based jobs.
+        type: string
+        default: rust:latest
+      linux-apt-packages:
+        description: Space-separated apt packages to install in the Linux container.
+        type: string
+        default: ""
+      run-semver-checks:
+        description: >
+          Run cargo-semver-checks. Requires a baseline version published on
+          crates.io to compare against; disable for unpublished crates.
+        type: boolean
+        default: true
+      run-commit-check:
+        description: >
+          Validate that the commit history follows the Conventional Commits
+          specification (cog check).
+        type: boolean
+        default: true
+      run-coverage:
+        description: Generate an lcov coverage report and upload it as an artifact.
+        type: boolean
+        default: true
+      workspace-flag:
+        description: >
+          Cargo scope flag applied to check/clippy/test/doc. Use "--all" or
+          "--workspace" for a Cargo workspace (monorepo), or leave empty for a
+          single-crate repo.
+        type: string
+        default: ""
+
+# Least privilege: jobs only need to read the repository.
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  linux:
+    name: Linux (fmt, clippy, test)
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 30
+    container:
+      image: ${{ inputs.rust-container-image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install apt packages
+        if: inputs.linux-apt-packages != ''
+        env:
+          APT_PACKAGES: ${{ inputs.linux-apt-packages }}
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends $APT_PACKAGES
+
+      - name: Install rustfmt and clippy
+        run: rustup component add rustfmt clippy
+
+      - name: Cache cargo registry and build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: linux
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy ${{ inputs.workspace-flag }} --all-targets --all-features --locked
+
+      - name: Test
+        run: cargo test ${{ inputs.workspace-flag }} --all-features --locked
+
+  windows:
+    name: Windows (fmt, clippy, test)
+    runs-on: [self-hosted, Windows]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry and build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: windows
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy ${{ inputs.workspace-flag }} --all-targets --all-features --locked
+
+      - name: Test
+        run: cargo test ${{ inputs.workspace-flag }} --all-features --locked
+
+  cargo-deny:
+    name: cargo-deny (advisories, licenses, bans, sources)
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 15
+    container:
+      image: ${{ inputs.rust-container-image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+
+      - name: Check dependencies
+        run: cargo deny check
+
+  typos:
+    name: Spell check (typos)
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for typos
+        uses: crate-ci/typos@v1.48.0
+
+  commit-check:
+    name: Conventional commits
+    if: inputs.run-commit-check
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 10
+    container:
+      image: ${{ inputs.rust-container-image }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install cocogitto
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cocogitto
+
+      - name: Check commit messages
+        run: cog check --ignore-merge-commits
+
+  cargo-hack:
+    name: cargo-hack (feature powerset)
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 20
+    container:
+      image: ${{ inputs.rust-container-image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache cargo registry and build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: hack
+
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-hack
+
+      - name: Check every feature combination
+        run: cargo hack --feature-powerset --no-dev-deps check --locked
+
+  docs:
+    name: Doc lint (rustdoc)
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 15
+    container:
+      image: ${{ inputs.rust-container-image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache cargo registry and build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: docs
+
+      - name: Build documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc ${{ inputs.workspace-flag }} --no-deps --all-features --locked
+
+  coverage:
+    name: Coverage (cargo-llvm-cov)
+    if: inputs.run-coverage
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 30
+    container:
+      image: ${{ inputs.rust-container-image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install apt packages
+        if: inputs.linux-apt-packages != ''
+        env:
+          APT_PACKAGES: ${{ inputs.linux-apt-packages }}
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends $APT_PACKAGES
+
+      - name: Install llvm-tools
+        run: rustup component add llvm-tools-preview
+
+      - name: Cache cargo registry and build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: coverage
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Generate coverage report
+        run: cargo llvm-cov ${{ inputs.workspace-flag }} --all-features --locked --lcov --output-path lcov.info
+
+      # No coverage service configured yet; keep the report as a build artifact.
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: lcov.info
+          path: lcov.info
+          if-no-files-found: error
+
+  semver-checks:
+    name: cargo-semver-checks
+    if: inputs.run-semver-checks
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 20
+    container:
+      image: ${{ inputs.rust-container-image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache cargo registry and build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: semver
+
+      - name: Install cargo-semver-checks
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-semver-checks
+
+      - name: Check for SemVer-breaking API changes
+        run: cargo semver-checks --all-features

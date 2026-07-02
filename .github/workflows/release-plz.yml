@@ -1,0 +1,99 @@
+# Reusable release-plz workflow (central copy).
+#
+# Called by each publishable repo (see examples/release-plz.yml) via:
+#
+#   uses: ecoates2/.github/.github/workflows/release-plz.yml@v1
+#
+# On every push to main this:
+#   - release-plz-pr: opens/updates a "Release PR" that bumps the version and
+#     updates CHANGELOG.md from the Conventional Commits since the last release.
+#   - release-plz-release: when that Release PR is merged (version in Cargo.toml
+#     changes), publishes to crates.io and creates the git tag + GitHub release.
+#
+# release-plz understands Cargo workspaces natively, so this same workflow drives
+# per-crate versions and changelogs in a monorepo with no changes.
+#
+# Prerequisites (one-time, per calling repo):
+#   - Settings -> Actions -> General -> Workflow permissions:
+#     enable "Allow GitHub Actions to create and approve pull requests".
+#   - Provide the CARGO_REGISTRY_TOKEN secret (scopes: publish-new,
+#     publish-update). The caller passes it in via `secrets:`.
+#   - Each crate must be published manually once before release-plz can update it.
+name: Release-plz
+
+on:
+  workflow_call:
+    inputs:
+      rust-container-image:
+        description: Container image used for the release jobs.
+        type: string
+        default: rust:latest
+      owner-guard:
+        description: >
+          If set, jobs only run when github.repository_owner equals this value.
+          Prevents forks from attempting to publish. Leave empty to disable.
+        type: string
+        default: ""
+    secrets:
+      CARGO_REGISTRY_TOKEN:
+        description: crates.io token used to publish releases.
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Publish any unpublished versions to crates.io and tag the release.
+  release-plz-release:
+    name: Release-plz release
+    if: inputs.owner-guard == '' || github.repository_owner == inputs.owner-guard
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 30
+    container:
+      image: ${{ inputs.rust-container-image }}
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  # Open/update the Release PR that prepares the next version + changelog.
+  release-plz-pr:
+    name: Release-plz PR
+    if: inputs.owner-guard == '' || github.repository_owner == inputs.owner-guard
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 30
+    container:
+      image: ${{ inputs.rust-container-image }}
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
