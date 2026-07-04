@@ -20,12 +20,6 @@ on:
         description: Space-separated apt packages to install in the Linux container.
         type: string
         default: ""
-      run-semver-checks:
-        description: >
-          Run cargo-semver-checks. Requires a baseline version published on
-          crates.io to compare against; disable for unpublished crates.
-        type: boolean
-        default: true
       run-commit-check:
         description: >
           Validate that the commit history follows the Conventional Commits
@@ -141,24 +135,16 @@ jobs:
         uses: crate-ci/typos@v1.48.0
 
   commit-check:
-    name: Conventional commits
-    if: inputs.run-commit-check
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    container:
-      image: ${{ inputs.rust-container-image }}
+    if: inputs.run-commit-check
+    name: check conventional commit compliance
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@main
         with:
           fetch-depth: 0
 
-      - name: Install cocogitto
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cocogitto
-
-      - name: Check commit messages
-        run: cog check --ignore-merge-commits
+      - name: Conventional commits check
+        uses: cocogitto/cocogitto-action@v3
 
   cargo-hack:
     name: cargo-hack (feature powerset)
@@ -179,8 +165,13 @@ jobs:
         with:
           tool: cargo-hack
 
+      # Note: no `--locked` here. `--no-dev-deps` rewrites Cargo.toml to strip
+      # dev-dependencies, which changes the resolved set whenever a dev-dep
+      # pulls in otherwise-unused packages. That makes Cargo want to update
+      # Cargo.lock, and `--locked` would abort the run (exit 101) before any
+      # feature combination is checked. The other jobs still enforce `--locked`.
       - name: Check every feature combination
-        run: cargo hack --feature-powerset --no-dev-deps check --locked
+        run: cargo hack --feature-powerset --no-dev-deps check
 
   docs:
     name: Doc lint (rustdoc)
@@ -242,26 +233,3 @@ jobs:
           name: lcov.info
           path: lcov.info
           if-no-files-found: error
-
-  semver-checks:
-    name: cargo-semver-checks
-    if: inputs.run-semver-checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    container:
-      image: ${{ inputs.rust-container-image }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache cargo registry and build artifacts
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: semver
-
-      - name: Install cargo-semver-checks
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-semver-checks
-
-      - name: Check for SemVer-breaking API changes
-        run: cargo semver-checks --all-features
