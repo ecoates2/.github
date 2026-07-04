@@ -25,5 +25,4 @@ jobs:
       linux-apt-packages: libglib2.0-bin adwaita-icon-theme hicolor-icon-theme
 
       # --- Example: an unpublished app / workspace (uncomment as needed) ---
-      # run-semver-checks: false      # nothing published to diff against
       # workspace-flag: "--workspace" # lint/test every crate in the workspace

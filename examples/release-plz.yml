@@ -5,8 +5,12 @@ on:
   push:
     branches: [main]
 
+# The called workflow's jobs need to write tags/releases and open the Release
+# PR. A reusable workflow can only ever be granted permissions the CALLER also
+# grants, so these must be set here (not just inside the reusable workflow).
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   release-plz:
