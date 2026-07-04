@@ -37,6 +37,10 @@ on:
           single-crate repo.
         type: string
         default: ""
+    secrets:
+      CODECOV_TOKEN:
+        description: Codecov upload token used to upload lcov.info to Codecov.
+        required: true
 
 # Least privilege: jobs only need to read the repository.
 permissions:
@@ -226,10 +230,18 @@ jobs:
       - name: Generate coverage report
         run: cargo llvm-cov ${{ inputs.workspace-flag }} --all-features --locked --lcov --output-path lcov.info
 
-      # No coverage service configured yet; keep the report as a build artifact.
+      # Always keep the raw report as a build artifact.
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: lcov.info
           path: lcov.info
           if-no-files-found: error
+
+      # A Codecov outage shouldn't fail the whole run, so errors are non-fatal.
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: false

@@ -19,6 +19,9 @@ permissions:
 jobs:
   ci:
     uses: ecoates2/.github/.github/workflows/rust-ci.yml@v1
+    # Forward this repo's secrets to the reusable workflow. Add CODECOV_TOKEN
+    # as a repo secret (from your Codecov account) before pushing.
+    secrets: inherit
     with:
       # --- Example: a published single-crate library (like icon-sys) ---
       # gio CLI + folder icon themes for the Linux backend tests.
