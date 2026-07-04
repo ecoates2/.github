@@ -55,7 +55,7 @@ env:
 jobs:
   linux:
     name: Linux (fmt, clippy, test)
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
       image: ${{ inputs.rust-container-image }}
@@ -89,7 +89,7 @@ jobs:
 
   windows:
     name: Windows (fmt, clippy, test)
-    runs-on: [self-hosted, Windows]
+    runs-on: windows-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -115,7 +115,7 @@ jobs:
 
   cargo-deny:
     name: cargo-deny (advisories, licenses, bans, sources)
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
       image: ${{ inputs.rust-container-image }}
@@ -132,7 +132,7 @@ jobs:
 
   typos:
     name: Spell check (typos)
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -143,7 +143,7 @@ jobs:
   commit-check:
     name: Conventional commits
     if: inputs.run-commit-check
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     container:
       image: ${{ inputs.rust-container-image }}
@@ -162,7 +162,7 @@ jobs:
 
   cargo-hack:
     name: cargo-hack (feature powerset)
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     container:
       image: ${{ inputs.rust-container-image }}
@@ -184,7 +184,7 @@ jobs:
 
   docs:
     name: Doc lint (rustdoc)
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
       image: ${{ inputs.rust-container-image }}
@@ -204,7 +204,7 @@ jobs:
   coverage:
     name: Coverage (cargo-llvm-cov)
     if: inputs.run-coverage
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
       image: ${{ inputs.rust-container-image }}
@@ -246,7 +246,7 @@ jobs:
   semver-checks:
     name: cargo-semver-checks
     if: inputs.run-semver-checks
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     container:
       image: ${{ inputs.rust-container-image }}
