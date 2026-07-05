@@ -175,7 +175,7 @@ jobs:
       # Cargo.lock, and `--locked` would abort the run (exit 101) before any
       # feature combination is checked. The other jobs still enforce `--locked`.
       - name: Check every feature combination
-        run: cargo hack --feature-powerset --no-dev-deps check
+        run: cargo hack ${{ inputs.workspace-flag }} --feature-powerset --no-dev-deps check
 
   docs:
     name: Doc lint (rustdoc)
