@@ -65,13 +65,10 @@ jobs:
         env:
           APT_PACKAGES: ${{ inputs.linux-apt-packages }}
         run: |
-          set -euo pipefail
+          set -eu
           apt-get update
-
-          # Split on spaces/newlines/tabs into an array.
-          read -r -a pkgs <<<"$(echo "$APT_PACKAGES" | xargs)"
-
-          apt-get install -y --no-install-recommends "${pkgs[@]}"
+          # xargs splits the whitespace-separated list into separate args.
+          echo "$APT_PACKAGES" | xargs apt-get install -y --no-install-recommends
 
       - name: Install rustfmt and clippy
         run: rustup component add rustfmt clippy
@@ -167,7 +164,7 @@ jobs:
       - name: Conventional commits check
         uses: cocogitto/cocogitto-action@v4
         with:
-          command: 'check --ignore-pattern "^(chore\\(dependabot\\)|dependabot)"'
+          command: "check --ignore-pattern '^(chore\\(dependabot\\)|dependabot)'"
 
   cargo-hack:
     name: cargo-hack (feature powerset)
@@ -230,13 +227,10 @@ jobs:
         env:
           APT_PACKAGES: ${{ inputs.linux-apt-packages }}
         run: |
-          set -euo pipefail
+          set -eu
           apt-get update
-
-          # Split on spaces/newlines/tabs into an array.
-          read -r -a pkgs <<<"$(echo "$APT_PACKAGES" | xargs)"
-
-          apt-get install -y --no-install-recommends "${pkgs[@]}"
+          # xargs splits the whitespace-separated list into separate args.
+          echo "$APT_PACKAGES" | xargs apt-get install -y --no-install-recommends
 
       - name: Install llvm-tools
         run: rustup component add llvm-tools-preview
