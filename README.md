@@ -8,10 +8,11 @@ consumed by other repos via `uses:` references pinned to a version tag.
 
 | File | Purpose |
 | --- | --- |
-| [`.github/workflows/rust-ci.yml`](.github/workflows/rust-ci.yml) | Reusable Rust CI: fmt, clippy, test (Linux + Windows), cargo-deny, typos, conventional commits, cargo-hack, rustdoc, coverage, semver-checks. |
+| [`.github/workflows/rust-ci.yml`](.github/workflows/rust-ci.yml) | Reusable Rust CI: fmt, clippy, test (Linux + Windows), cargo-deny, typos, actionlint, conventional commits, cargo-hack, rustdoc, coverage, semver-checks. |
 | [`.github/workflows/release-plz.yml`](.github/workflows/release-plz.yml) | Reusable release automation (Release PR + publish to crates.io). |
 | [`examples/ci.yml`](examples/ci.yml) | Copy into each repo at `.github/workflows/ci.yml`. |
 | [`examples/release-plz.yml`](examples/release-plz.yml) | Copy into each publishable repo at `.github/workflows/release-plz.yml`. |
+| [`.github/workflows/lint.yml`](.github/workflows/lint.yml) | Self-CI: runs `actionlint` on this repo's workflows and examples to catch invalid YAML. |
 
 ## How reusable workflows are referenced
 

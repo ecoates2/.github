@@ -1,0 +1,38 @@
+# Self-CI for this .github repo: validate the workflow YAML.
+#
+# The other files here are *reusable* workflows (workflow_call) and examples,
+# so GitHub never executes them in this repo and nothing was catching syntax
+# breakage (e.g. from a Dependabot action bump). actionlint parses every
+# workflow and flags YAML errors, unknown/invalid keys, bad `uses:` refs and
+# broken ${{ }} expressions.
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref to save runner time.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      # Lints this repo's reusable workflows plus the examples/ templates
+      # (which live outside .github/workflows), catching invalid YAML, bad
+      # `uses:` refs and broken ${{ }} expressions.
+      - name: Run actionlint
+        uses: raven-actions/actionlint@v2
+        with:
+          files: ".github/workflows/*.yml, examples/*.yml"

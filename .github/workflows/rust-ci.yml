@@ -138,6 +138,18 @@ jobs:
       - name: Check for typos
         uses: crate-ci/typos@v1.48.0
 
+  actionlint:
+    name: Lint workflows (actionlint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      # Lints .github/workflows/*.yml by default, catching invalid YAML, bad
+      # `uses:` refs and broken ${{ }} expressions.
+      - name: Run actionlint
+        uses: raven-actions/actionlint@v2
+
   commit-check:
     runs-on: ubuntu-latest
     if: inputs.run-commit-check
@@ -149,6 +161,10 @@ jobs:
 
       - name: Conventional commits check
         uses: cocogitto/cocogitto-action@v4
+        with:
+          command: check
+          # Dependabot wants to create its own merge commits in its local history...
+          args: --ignore-merges
 
   cargo-hack:
     name: cargo-hack (feature powerset)
