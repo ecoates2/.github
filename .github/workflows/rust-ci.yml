@@ -58,7 +58,7 @@ jobs:
     container:
       image: ${{ inputs.rust-container-image }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install apt packages
         if: inputs.linux-apt-packages != ''
@@ -90,7 +90,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -118,7 +118,7 @@ jobs:
     container:
       image: ${{ inputs.rust-container-image }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install cargo-deny
         uses: taiki-e/install-action@v2
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check for typos
         uses: crate-ci/typos@v1.48.0
@@ -148,7 +148,7 @@ jobs:
           fetch-depth: 0
 
       - name: Conventional commits check
-        uses: cocogitto/cocogitto-action@v3
+        uses: cocogitto/cocogitto-action@v4
 
   cargo-hack:
     name: cargo-hack (feature powerset)
@@ -157,7 +157,7 @@ jobs:
     container:
       image: ${{ inputs.rust-container-image }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Cache cargo registry and build artifacts
         uses: Swatinem/rust-cache@v2
@@ -184,7 +184,7 @@ jobs:
     container:
       image: ${{ inputs.rust-container-image }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Cache cargo registry and build artifacts
         uses: Swatinem/rust-cache@v2
@@ -204,7 +204,7 @@ jobs:
     container:
       image: ${{ inputs.rust-container-image }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install apt packages
         if: inputs.linux-apt-packages != ''
@@ -232,7 +232,7 @@ jobs:
 
       # Always keep the raw report as a build artifact.
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lcov.info
           path: lcov.info
@@ -240,7 +240,7 @@ jobs:
 
       # A Codecov outage shouldn't fail the whole run, so errors are non-fatal.
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: lcov.info
