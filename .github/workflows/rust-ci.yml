@@ -65,8 +65,13 @@ jobs:
         env:
           APT_PACKAGES: ${{ inputs.linux-apt-packages }}
         run: |
+          set -euo pipefail
           apt-get update
-          apt-get install -y --no-install-recommends "$APT_PACKAGES"
+
+          # Split on spaces/newlines/tabs into an array.
+          read -r -a pkgs <<<"$(echo "$APT_PACKAGES" | xargs)"
+
+          apt-get install -y --no-install-recommends "${pkgs[@]}"
 
       - name: Install rustfmt and clippy
         run: rustup component add rustfmt clippy
@@ -155,14 +160,14 @@ jobs:
     if: inputs.run-commit-check
     name: check conventional commit compliance
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Conventional commits check
         uses: cocogitto/cocogitto-action@v4
         with:
-          command: check --ignore-pattern "^(chore\\(dependabot\\)|dependabot)"
+          command: 'check --ignore-pattern "^(chore\\(dependabot\\)|dependabot)"'
 
   cargo-hack:
     name: cargo-hack (feature powerset)
@@ -225,8 +230,13 @@ jobs:
         env:
           APT_PACKAGES: ${{ inputs.linux-apt-packages }}
         run: |
+          set -euo pipefail
           apt-get update
-          apt-get install -y --no-install-recommends "$APT_PACKAGES"
+
+          # Split on spaces/newlines/tabs into an array.
+          read -r -a pkgs <<<"$(echo "$APT_PACKAGES" | xargs)"
+
+          apt-get install -y --no-install-recommends "${pkgs[@]}"
 
       - name: Install llvm-tools
         run: rustup component add llvm-tools-preview
