@@ -162,9 +162,7 @@ jobs:
       - name: Conventional commits check
         uses: cocogitto/cocogitto-action@v4
         with:
-          command: check
-          # Dependabot wants to create its own merge commits in its local history...
-          args: --ignore-merges
+          command: check --ignore-pattern "^(chore\\(dependabot\\)|dependabot)"
 
   cargo-hack:
     name: cargo-hack (feature powerset)
