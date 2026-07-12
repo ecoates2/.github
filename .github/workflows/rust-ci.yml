@@ -162,9 +162,12 @@ jobs:
           fetch-depth: 0
 
       - name: Conventional commits check
+        # Dependabot will use invalid syntax for its own commit history,
+        # but uses conventional commits on squash merging
+        if: github.actor != 'dependabot[bot]'
         uses: cocogitto/cocogitto-action@v4
         with:
-          command: "check --ignore-pattern '^(chore\\(dependabot\\)|dependabot)'"
+          command: check
 
   cargo-hack:
     name: cargo-hack (feature powerset)
