@@ -24,10 +24,6 @@ name: Release-plz
 on:
   workflow_call:
     inputs:
-      rust-container-image:
-        description: Container image used for the release jobs.
-        type: string
-        default: rust:latest
       owner-guard:
         description: >
           If set, jobs only run when github.repository_owner equals this value.
@@ -49,8 +45,6 @@ jobs:
     if: inputs.owner-guard == '' || github.repository_owner == inputs.owner-guard
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    container:
-      image: ${{ inputs.rust-container-image }}
     permissions:
       contents: write
       pull-requests: read
@@ -60,6 +54,9 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Run release-plz
         uses: release-plz/action@v0.5
@@ -75,8 +72,6 @@ jobs:
     if: inputs.owner-guard == '' || github.repository_owner == inputs.owner-guard
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    container:
-      image: ${{ inputs.rust-container-image }}
     permissions:
       contents: write
       pull-requests: write
@@ -89,6 +84,9 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Run release-plz
         uses: release-plz/action@v0.5
