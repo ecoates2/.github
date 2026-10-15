@@ -47,7 +47,7 @@ jobs:
   release-plz-release:
     name: Release-plz release
     if: inputs.owner-guard == '' || github.repository_owner == inputs.owner-guard
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
       image: ${{ inputs.rust-container-image }}
@@ -73,7 +73,7 @@ jobs:
   release-plz-pr:
     name: Release-plz PR
     if: inputs.owner-guard == '' || github.repository_owner == inputs.owner-guard
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
       image: ${{ inputs.rust-container-image }}
