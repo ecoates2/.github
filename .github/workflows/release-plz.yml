@@ -58,6 +58,12 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      # Not sure why I need this... ubuntu-latest should have it?
+      - name: Install GitHub CLI
+        uses: step-security/setup-gh@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run release-plz
         uses: release-plz/action@v0.5
         with:
@@ -87,6 +93,12 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      # Not sure why I need this... ubuntu-latest should have it?
+      - name: Install GitHub CLI
+        uses: step-security/setup-gh@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run release-plz
         uses: release-plz/action@v0.5
