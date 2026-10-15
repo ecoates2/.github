@@ -1,6 +1,6 @@
 # ecoates2/.github
 
-Central home for shared GitHub Actions workflows across ecoates2's Rust repos.
+Central home for shared GitHub Actions workflows across my Rust repos.
 Reusable workflows live in [`.github/workflows/`](.github/workflows) and are
 consumed by other repos via `uses:` references pinned to a version tag.
 
@@ -33,7 +33,7 @@ git tag -f v1            # move the major tag to the new commit
 git push -f origin v1
 ```
 
-Cut a new major (`v2`) only when you change the input contract in a
+NOTE: Cut a new major (`v2`) only when changing the input contract in a
 backwards-incompatible way, so existing callers on `@v1` don't break.
 
 ## rust-ci.yml inputs
