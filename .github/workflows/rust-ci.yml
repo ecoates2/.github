@@ -162,9 +162,9 @@ jobs:
           fetch-depth: 0
 
       - name: Conventional commits check
-        # Dependabot will use invalid syntax for its own commit history,
-        # but uses conventional commits on squash merging
-        if: github.actor != 'dependabot[bot]'
+        # Dependabot and release-plz will use invalid syntax for their own commit history,
+        # but use conventional commits on squash merging
+        if: github.actor != 'dependabot[bot]' && !(github.actor == 'github-actions[bot]' && startsWith(github.head_ref, 'release-plz-'))
         uses: cocogitto/cocogitto-action@v4
         with:
           command: check
